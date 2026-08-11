@@ -680,6 +680,8 @@ pub struct Preferences {
 	pub remove_default_feeds: String,
 	#[revision(start = 2, default_fn = "default_clean_urls")]
 	pub clean_urls: String,
+	#[revision(start = 1)]
+	pub geo_filter: String,
 }
 
 fn serialize_vec_with_plus<S>(vec: &[String], serializer: S) -> Result<S::Ok, S::Error>
@@ -739,6 +741,7 @@ impl Preferences {
 			hide_score: setting(req, "hide_score"),
 			remove_default_feeds: setting(req, "remove_default_feeds"),
 			clean_urls: setting(req, "clean_urls"),
+			geo_filter: setting(req, "geo_filter"),
 		}
 	}
 
@@ -1624,10 +1627,11 @@ assert_eq!(format_url("https://v.redd.it/foo/DASH_360.mp4?source=fallback"), "/v
 			hide_score: "off".to_owned(),
 			remove_default_feeds: "off".to_owned(),
 			clean_urls: "off".to_owned(),
+			geo_filter: "GLOBAL".to_owned(),
 		};
 		let urlencoded = serde_urlencoded::to_string(prefs).expect("Failed to serialize Prefs");
 
-		assert_eq!(urlencoded, "theme=laserwave&front_page=default&layout=compact&wide=on&blur_spoiler=on&show_nsfw=off&blur_nsfw=on&hide_hls_notification=off&video_quality=best&hide_sidebar_and_summary=off&use_hls=on&autoplay_videos=on&fixed_navbar=on&disable_visit_reddit_confirmation=on&comment_sort=confidence&post_sort=top&subscriptions=memes%2Bmildlyinteresting&filters=&hide_awards=off&hide_score=off&remove_default_feeds=off&clean_urls=off");
+		assert_eq!(urlencoded, "theme=laserwave&front_page=default&layout=compact&wide=on&blur_spoiler=on&show_nsfw=off&blur_nsfw=on&hide_hls_notification=off&video_quality=best&hide_sidebar_and_summary=off&use_hls=on&autoplay_videos=on&fixed_navbar=on&disable_visit_reddit_confirmation=on&comment_sort=confidence&post_sort=top&subscriptions=memes%2Bmildlyinteresting&filters=&hide_awards=off&hide_score=off&remove_default_feeds=off&clean_urls=off&geo_filter=GLOBAL");
 	}
 
 	#[test]
@@ -1736,9 +1740,9 @@ How`s your monitor by the way? Any IPS bleed whatsoever? I either got lucky or t
 	}
 
 	static KNOWN_GOOD_CONFIGS: &[&str] = &[
-		"ఴӅβØØҞÉဏႢձĬ༧ȒʯऌԔӵ୮༏",
-		"ਧՊΥÀÃǎƱГ۸ඣമĖฤ႙ʟาúໜϾௐɥঀĜໃહཞઠѫҲɂఙ࿔ǲઉƲӟӻĻฅΜδ໖ԜǗဖငƦơ৶Ą௩ԹʛใЛʃශаΏ",
-		"ਧԩΥÀÃÎŠ౭൩ඔႠϼҭöҪƸռઇԾॐნɔາǒՍҰच௨ಖມŃЉŐདƦ๙ϩএఠȝഽйʮჯඒϰळՋ௮ສ৵ऎΦѧਹಧଟƙŃ३î༦ŌပղयƟแҜ།",
+		"ఴǐΪØÃҤÉఅഐႮვÆվƟ๑ഈ௲º",
+		"ਧճΥÀÃǙŨ౭ѰЉਠ༃ඍୟϊÓႼઞƶǲѾҠŶဿৠǡȈЧတĄঘशƕİԪӥОϥΪѼĔજɍႰůƅıęႵຈഛशખӺफƊўચபūগລનаΦǮʀԅཪ٦ಟซωॶԓԙµ",
+		"ਧՎΥºÃǖবб྾цҗҢจഘĦਝ೨ծമ۞তʦཤཎຟՐȸ൯ങஏ९ȹ૯нե࿑Ʋථఐ۳ԊຍखʟషၡŁलſԇચਆॹǕϻΪজԯǐĦЅթȣơϱǃඛϾຝϤ໐Քµ",
 	];
 
 	#[test]

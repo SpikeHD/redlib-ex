@@ -80,11 +80,10 @@
     "REDLIB_DEFAULT_REMOVE_DEFAULT_FEEDS": {
       "required": false
     },
-<<<<<<< HEAD
-    "REDLIB_TAINTED_MEDIA": {
-=======
+"REDLIB_TAINTED_MEDIA": {
+      "required": false
+    },
     "REDLIB_DEFAULT_CLEAN_URLS": {
->>>>>>> pr460
       "required": false
     }
   }
