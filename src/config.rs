@@ -111,6 +111,9 @@ pub struct Config {
 
 	#[serde(rename = "REDLIB_TAINTED_MEDIA")]
 	pub(crate) tainted_media: Option<String>,
+
+	#[serde(rename = "REDLIB_DEFAULT_CLEAN_URLS")]
+	pub(crate) default_clean_urls: Option<String>,
 }
 
 impl Config {
@@ -160,6 +163,7 @@ impl Config {
 			full_url: parse("REDLIB_FULL_URL"),
 			default_remove_default_feeds: parse("REDLIB_DEFAULT_REMOVE_DEFAULT_FEEDS"),
 			tainted_media: parse("REDLIB_TAINTED_MEDIA"),
+			default_clean_urls: parse("REDLIB_DEFAULT_CLEAN_URLS"),
 		}
 	}
 }
@@ -191,6 +195,7 @@ fn get_setting_from_config(name: &str, config: &Config) -> Option<String> {
 		"REDLIB_FULL_URL" => config.full_url.clone(),
 		"REDLIB_DEFAULT_REMOVE_DEFAULT_FEEDS" => config.default_remove_default_feeds.clone(),
 		"REDLIB_TAINTED_MEDIA" => config.tainted_media.clone(),
+		"REDLIB_DEFAULT_CLEAN_URLS" => config.default_clean_urls.clone(),
 		_ => None,
 	}
 }
