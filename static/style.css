@@ -706,7 +706,7 @@ select,
     margin-bottom: 0;
 }
 
-#searchbox:focus-within {   
+#searchbox:focus-within {
     outline: 2px solid var(--accent);
 }
 
@@ -1270,6 +1270,11 @@ a.search_subreddit:hover {
 /* Prevent the flexible title row from absorbing the body's growth on expand */
 .post:has(.post_preview_wrap) {
     grid-template-rows: auto auto auto auto auto auto auto;
+}
+
+/* Prevent short image from stretching on long post */
+.post:has(.post_preview_wrap) .post_thumbnail {
+    align-self: start;
 }
 
 /* Used only for text post preview, and only applied once JS detects overflow. */
