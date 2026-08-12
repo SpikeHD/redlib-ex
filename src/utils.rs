@@ -340,6 +340,7 @@ pub struct Post {
 	pub body: String,
 	pub author: Author,
 	pub permalink: String,
+	pub parent_permalink: String,
 	pub link_title: String,
 	pub poll: Option<Poll>,
 	pub score: (String, String),
@@ -456,6 +457,7 @@ impl Post {
 					stickied: data["stickied"].as_bool().unwrap_or_default() || data["pinned"].as_bool().unwrap_or_default(),
 				},
 				permalink: val(post, "permalink"),
+				parent_permalink: parent_permalink(&val(post, "permalink"), &val(post, "parent_id")),
 				link_title: val(post, "link_title"),
 				poll: Poll::parse(&data["poll_data"]),
 				rel_time,
@@ -860,7 +862,8 @@ pub async fn parse_post(post: &Value) -> Post {
 			},
 			distinguished: val(post, "distinguished"),
 		},
-		permalink,
+		permalink: permalink.clone(),
+		parent_permalink: parent_permalink(&permalink, &val(post, "parent_id")),
 		link_title: val(post, "link_title"),
 		poll,
 		score: format_num(score),
@@ -1525,6 +1528,21 @@ pub fn get_post_url(post: &Post) -> String {
 /// Returns an absolute URL given a relative URL, as needed by RSS feeds
 pub fn to_absolute_url(relative_path: &str) -> String {
 	format!("{}{}", config::get_setting("REDLIB_FULL_URL").unwrap_or_default(), relative_path)
+}
+
+/// Build the permalink to the parent comment of a comment. Returns an empty
+/// string when the comment has no comment parent (e.g. it is a top level comment
+/// or not a comment at all).
+fn parent_permalink(permalink: &str, parent_id: &str) -> String {
+	if !parent_id.starts_with("t1_") {
+		return String::new();
+	}
+
+	let parent = parent_id.trim_start_matches("t1_");
+	let mut segments: Vec<&str> = permalink.trim_end_matches('/').split('/').collect();
+	segments.pop(); // Remove the current comment id from the end
+	segments.push(parent);
+	format!("{}/", segments.join("/"))
 }
 
 #[cfg(test)]

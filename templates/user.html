@@ -81,10 +81,25 @@ body %}
                     <p class="comment_body">{{ post.body|safe }}</p>
                     <div class="comment_actions">
                         <a
-                            class="comment_button"
+                            class="comment_button comment_context"
                             href="{{ post.permalink }}?context=9999#{{ post.id }}"
                             title="View this comment in the context of its thread"
                             >context</a
+                        >
+                        {% if post.parent_permalink != "" %}
+                        <a
+                            class="comment_button comment_parent"
+                            href="{{ post.parent_permalink }}"
+                            title="Go to the parent comment"
+                            >parent</a
+                        >
+                        {% endif %}
+                        <a
+                            class="comment_button comment_permalink"
+                            href="{{ post.permalink }}"
+                            data-url="{{ post.permalink }}"
+                            title="Copy a direct link to this comment"
+                            >copy permalink</a
                         >
                     </div>
                 </details>
