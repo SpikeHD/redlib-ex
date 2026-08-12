@@ -1,4 +1,4 @@
-name: Rust Build & Publish
+name: Rust Build
 
 on:
   push:
@@ -14,59 +14,33 @@ env:
 
 jobs:
   build:
+    name: Build (x86_64)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Packages
         uses: Swatinem/rust-cache@v2
 
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-
-      - name: Install musl-gcc
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends musl-tools git cmake perl pkg-config libclang-dev
-
-      - name: Install cargo musl target
-        run: rustup target add x86_64-unknown-linux-musl
-
-      # Building actions
       - name: Build
-        run: RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-unknown-linux-musl
+        run: cargo build --release
 
-      - name: Calculate SHA512 checksum
-        run: sha512sum target/x86_64-unknown-linux-musl/release/redlib > redlib.sha512
-
-      - name: Calculate SHA256 checksum
-        run: sha256sum target/x86_64-unknown-linux-musl/release/redlib > redlib.sha256
+      - name: Calculate checksums
+        run: |
+          cd target/release
+          sha512sum redlib-ex > redlib.sha512
+          sha256sum redlib-ex > redlib.sha256
 
       - uses: actions/upload-artifact@v4
-        name: Upload a Build Artifact
+        name: Upload Build Artifact
         with:
           name: redlib-ex
           path: |
-            target/x86_64-unknown-linux-musl/release/redlib
-            redlib.sha512
-            redlib.sha256
-
-      # Publishing
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: github.ref_type == 'tag'
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }} - ${{ github.event.head_commit.message }}
-          draft: false
-          files: |
-            target/x86_64-unknown-linux-musl/release/redlib
-            redlib.sha512
-            redlib.sha256
-          body: |
-            - ${{ github.event.head_commit.message }} ${{ github.sha }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            target/release/redlib-ex
+            target/release/redlib.sha512
+            target/release/redlib.sha256

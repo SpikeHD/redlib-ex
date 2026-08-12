@@ -37,9 +37,8 @@ Redlib is a private front-end like [Invidious](https://github.com/iv-org/invidio
    - Podman
       - Quadlets
 
-   - [Binary](#binary)
+   - [Building and running](#building-and-running)
      - [Running as a systemd service](#running-as-a-systemd-service)
-   - [Building from source](#building-from-source)
    - [Replit/Heroku/Glitch](#replit-heroku-glitch)
    - [launchd (macOS)](#launchd-macos)
 6. [Configuration](#configuration)
@@ -250,26 +249,25 @@ You can check the status of your container by using the following command:
 systemctl --user status redlib.service
 ```
 
-## Binary
+## Building and running
 
-If you're on Linux, you can grab a binary from [the newest release](https://github.com/redlib-org/redlib/releases/latest) from GitHub.
-
-Download the binary using [Wget](https://www.gnu.org/software/wget/):
+Install [Rust and Cargo](https://rust-lang.org/tools/install/), then clone the repository and build a release binary:
 
 ```bash
-wget https://github.com/redlib-org/redlib/releases/download/v0.31.0/redlib
+git clone https://github.com/redlib-org/redlib && cd redlib
+cargo build --release
 ```
 
-Make the binary executable and change its ownership to `root`:
+This produces the `redlib-ex` binary at `target/release/redlib-ex`. If you want it available system-wide, copy it to `/usr/bin`:
 
 ```bash
-sudo chmod +x redlib && sudo chown root:root redlib
+sudo cp target/release/redlib-ex /usr/bin/redlib
 ```
 
-Copy the binary to `/usr/bin`:
+You can also run it directly from the source tree:
 
 ```bash
-sudo cp ./redlib /usr/bin/redlib
+cargo run
 ```
 
 Deploy Redlib to `0.0.0.0:8080`:
@@ -304,15 +302,6 @@ guarantee nginx waits for this service to start. Edit
 ```conf
 [Unit]
 Before=nginx.service
-```
-
-## Building from source
-
-To deploy Redlib with changes not yet included in the latest release, you can build the application from source.
-
-```bash
-git clone https://github.com/redlib-org/redlib && cd redlib
-cargo run
 ```
 
 ## Replit/Heroku
