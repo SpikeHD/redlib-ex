@@ -9,12 +9,12 @@ use std::sync::LazyLock;
 use futures_lite::FutureExt;
 use hyper::{header::HeaderValue, Body, Request, Response};
 use log::{info, warn};
-use redlib::client::{canonical_path, proxy, rate_limit_check, CLIENT};
-use redlib::server::{self, RequestExt};
-use redlib::utils::{error, redirect, ThemeAssets};
-use redlib::{config, duplicates, headers, instance_info, post, search, settings, subreddit, user};
+use redlib_ex::client::{canonical_path, proxy, rate_limit_check, CLIENT};
+use redlib_ex::server::{self, RequestExt};
+use redlib_ex::utils::{error, redirect, ThemeAssets};
+use redlib_ex::{config, duplicates, headers, instance_info, post, search, settings, subreddit, user};
 
-use redlib::client::OAUTH_CLIENT;
+use redlib_ex::client::OAUTH_CLIENT;
 
 // Create Services
 
@@ -288,7 +288,7 @@ async fn main() {
 	app.at("/static/*path").get(|r| proxy(r, "https://www.redditstatic.com/{path}").boxed());
 
 	// RedGifs proxy with lazy loading
-	app.at("/redgifs/*path").get(|req| redlib::redgifs::handler(req).boxed());
+	app.at("/redgifs/*path").get(|req| redlib_ex::redgifs::handler(req).boxed());
 
 	// Giphy proxy
 	app.at("/giphy/:id/:ext").get(|r| proxy(r, "https://media.giphy.com/media/{id}/giphy.{ext}").boxed());

@@ -47,7 +47,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: Upload a Build Artifact
         with:
-          name: redlib
+          name: redlib-ex
           path: |
             target/x86_64-unknown-linux-musl/release/redlib
             redlib.sha512

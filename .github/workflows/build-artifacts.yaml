@@ -10,7 +10,7 @@ on:
   release:
     types: [published]
 
-env: 
+env:
   CARGO_TERM_COLOR: always
 
   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: aarch64-linux-gnu-gcc
@@ -30,16 +30,16 @@ jobs:
           - armv7-unknown-linux-musleabihf
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           target: ${{ matrix.target }}
-      
+
       - if: matrix.target == 'x86_64-unknown-linux-musl'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends musl-tools git cmake perl pkg-config libclang-dev
- 
+
       - if: matrix.target == 'armv7-unknown-linux-musleabihf'
         run: |
           sudo apt update
@@ -58,7 +58,7 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package release
-        run: tar czf redlib-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release/ redlib
+        run: tar czf redlib-ex-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release/ redlib-ex
 
       - name: Upload release
         uses: softprops/action-gh-release@v1
@@ -67,10 +67,7 @@ jobs:
           name: ${{ steps.version.outputs.VERSION }} - ${{ github.event.head_commit.message }}
           draft: true
           files: |
-            redlib-${{ matrix.target }}.tar.gz
+            redlib-ex-${{ matrix.target }}.tar.gz
           body: |
             - ${{ github.event.head_commit.message }} ${{ github.sha }}
           generate_release_notes: true
-
-
-

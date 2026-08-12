@@ -1636,7 +1636,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "redlib"
+name = "redlib-ex"
 version = "0.37.0"
 dependencies = [
  "arc-swap",
