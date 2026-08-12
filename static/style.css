@@ -1596,6 +1596,22 @@ summary.comment_data {
     display: none;
 }
 
+.comment_actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.comment_button {
+    opacity: 0.7;
+    font-size: 0.85em;
+    text-decoration: underline;
+}
+.comment_button:hover {
+    opacity: 1;
+}
+
 .moderator,
 .admin {
     opacity: 1;

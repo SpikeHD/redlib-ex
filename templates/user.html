@@ -79,6 +79,14 @@ body %}
                         </div>
                     </summary>
                     <p class="comment_body">{{ post.body|safe }}</p>
+                    <div class="comment_actions">
+                        <a
+                            class="comment_button"
+                            href="{{ post.permalink }}?context=9999#{{ post.id }}"
+                            title="View this comment in the context of its thread"
+                            >context</a
+                        >
+                    </div>
                 </details>
             </div>
             {% endif %} {% endfor %} {% if prefs.use_hls == "on" %}
