@@ -2,6 +2,7 @@
 #![allow(clippy::cmp_owned)]
 
 use crate::config::{self, get_setting};
+use crate::redgifs;
 use crate::{client::json, server::RequestExt};
 use askama::Template;
 use clearurls::UrlCleaner;
@@ -10,8 +11,7 @@ use hyper::{Body, Request, Response};
 use libflate::deflate::{Decoder, Encoder};
 use log::error;
 use regex::Regex;
-use revision::{revisioned, Error};
-use crate::redgifs;
+use revision::{Error, revisioned};
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
@@ -22,7 +22,7 @@ use std::io::{Read, Write};
 use std::str::FromStr;
 use std::string::ToString;
 use std::sync::{Arc, LazyLock};
-use time::{macros::format_description, Duration, OffsetDateTime};
+use time::{Duration, OffsetDateTime, macros::format_description};
 use url::Url;
 
 /// Write a message to stderr on debug mode. This function is a no-op on
@@ -999,11 +999,7 @@ pub fn setting(req: &Request<Body>, name: &str) -> String {
 /// Retrieve the value of a setting by name or the default value
 pub fn setting_or_default(req: &Request<Body>, name: &str, default: String) -> String {
 	let value = setting(req, name);
-	if value.is_empty() {
-		default
-	} else {
-		value
-	}
+	if value.is_empty() { default } else { value }
 }
 
 /// Detect and redirect in the event of a random subreddit
@@ -1048,7 +1044,7 @@ pub fn format_url(url: &str) -> String {
 				regex.captures(url).map_or(String::new(), |caps| match segments {
 					1 => [format, &caps[1]].join(""),
 					2 => [format, &caps[1], "/", &caps[2]].join(""),
-3 => [format, &caps[1], "/", &caps[2].to_lowercase().as_str(), "/", &caps[3]].join(""),
+					3 => [format, &caps[1], "/", caps[2].to_lowercase().as_str(), "/", &caps[3]].join(""),
 					_ => String::new(),
 				})
 			};
@@ -1533,7 +1529,7 @@ pub fn to_absolute_url(relative_path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-	use super::{deflate_compress, deflate_decompress, format_num, format_url, render_bullet_lists, rewrite_emotes, rewrite_urls, url_path_basename, Post, Preferences};
+	use super::{Post, Preferences, deflate_compress, deflate_decompress, format_num, format_url, render_bullet_lists, rewrite_emotes, rewrite_urls, url_path_basename};
 
 	#[test]
 	fn format_num_works() {
@@ -1583,7 +1579,7 @@ mod tests {
 			format_url("https://preview.redd.it/qwerty.jpg?auto=webp&s=asdf"),
 			"/preview/pre/qwerty.jpg?auto=webp&s=asdf"
 		);
-assert_eq!(format_url("https://v.redd.it/foo/DASH_360.mp4?source=fallback"), "/vid/foo/dash/360.mp4");
+		assert_eq!(format_url("https://v.redd.it/foo/DASH_360.mp4?source=fallback"), "/vid/foo/dash/360.mp4");
 		assert_eq!(format_url("https://v.redd.it/foo/CMAF_720.mp4?source=fallback"), "/vid/foo/cmaf/720.mp4");
 		assert_eq!(
 			format_url("https://v.redd.it/foo/HLSPlaylist.m3u8?a=bar&v=1&f=sd"),
@@ -1631,7 +1627,10 @@ assert_eq!(format_url("https://v.redd.it/foo/DASH_360.mp4?source=fallback"), "/v
 		};
 		let urlencoded = serde_urlencoded::to_string(prefs).expect("Failed to serialize Prefs");
 
-		assert_eq!(urlencoded, "theme=laserwave&front_page=default&layout=compact&wide=on&blur_spoiler=on&show_nsfw=off&blur_nsfw=on&hide_hls_notification=off&video_quality=best&hide_sidebar_and_summary=off&use_hls=on&autoplay_videos=on&fixed_navbar=on&disable_visit_reddit_confirmation=on&comment_sort=confidence&post_sort=top&subscriptions=memes%2Bmildlyinteresting&filters=&hide_awards=off&hide_score=off&remove_default_feeds=off&clean_urls=off&geo_filter=GLOBAL");
+		assert_eq!(
+			urlencoded,
+			"theme=laserwave&front_page=default&layout=compact&wide=on&blur_spoiler=on&show_nsfw=off&blur_nsfw=on&hide_hls_notification=off&video_quality=best&hide_sidebar_and_summary=off&use_hls=on&autoplay_videos=on&fixed_navbar=on&disable_visit_reddit_confirmation=on&comment_sort=confidence&post_sort=top&subscriptions=memes%2Bmildlyinteresting&filters=&hide_awards=off&hide_score=off&remove_default_feeds=off&clean_urls=off&geo_filter=GLOBAL"
+		);
 	}
 
 	#[test]

@@ -1,13 +1,13 @@
 #![allow(clippy::cmp_owned)]
 use crate::client::json;
 use crate::server::RequestExt;
-use crate::utils::{error, filter_posts, format_url, get_filters, nsfw_landing, param, setting, template, Post, Preferences, User};
+use crate::utils::{Post, Preferences, User, error, filter_posts, format_url, get_filters, nsfw_landing, param, setting, template};
 use crate::{config, utils};
 use askama::Template;
 use chrono::DateTime;
 use htmlescape::decode_html;
 use hyper::{Body, Request, Response};
-use time::{macros::format_description, OffsetDateTime};
+use time::{OffsetDateTime, macros::format_description};
 
 // STRUCTS
 #[derive(Template)]

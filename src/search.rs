@@ -1,5 +1,5 @@
 #![allow(clippy::cmp_owned)]
-use crate::utils::{self, catch_random, clean_url, error, filter_posts, format_num, format_url, get_filters, param, redirect, setting, template, val, Post, Preferences};
+use crate::utils::{self, Post, Preferences, catch_random, clean_url, error, filter_posts, format_num, format_url, get_filters, param, redirect, setting, template, val};
 use crate::{
 	client::json,
 	server::RequestExt,

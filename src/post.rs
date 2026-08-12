@@ -4,8 +4,8 @@ use crate::config::get_setting;
 use crate::server::RequestExt;
 use crate::subreddit::{can_access_quarantine, quarantine};
 use crate::utils::{
-	clean_url, error, format_num, get_filters, nsfw_landing, param, parse_post, rewrite_emotes, setting, template, time, val, Author, Awards, Comment, Flair, FlairPart, Post,
-	Preferences,
+	Author, Awards, Comment, Flair, FlairPart, Post, Preferences, clean_url, error, format_num, get_filters, nsfw_landing, param, parse_post, rewrite_emotes, setting, template,
+	time, val,
 };
 use askama::Template;
 use hyper::{Body, Request, Response};

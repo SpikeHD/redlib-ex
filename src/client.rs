@@ -1,21 +1,21 @@
 use crate::dbg_msg;
-use crate::oauth::{force_refresh_token, token_daemon, Oauth, OauthBackendImpl};
+use crate::oauth::{Oauth, OauthBackendImpl, force_refresh_token, token_daemon};
 use crate::server::RequestExt;
-use crate::utils::{format_url, Post};
+use crate::utils::{Post, format_url};
 use arc_swap::ArcSwap;
 use cached::proc_macro::cached;
 use futures_lite::future::block_on;
-use futures_lite::{future::Boxed, FutureExt};
-use hyper::{body::Buf, header, Body, Request as HyperRequest, Response as HyperResponse};
+use futures_lite::{FutureExt, future::Boxed};
+use hyper::{Body, Request as HyperRequest, Response as HyperResponse, body::Buf, header};
 use log::{error, info, trace, warn};
-use percent_encoding::{percent_encode, CONTROLS};
+use percent_encoding::{CONTROLS, percent_encode};
 use serde_json::Value;
 use std::result::Result;
+use std::sync::LazyLock;
 use std::sync::atomic::Ordering;
 use std::sync::atomic::{AtomicBool, AtomicU16};
-use std::sync::LazyLock;
 use wreq::redirect::Policy;
-use wreq::{header as wreq_header, Client as WreqClient, EmulationFactory, Method, Response as WreqResponse};
+use wreq::{Client as WreqClient, EmulationFactory, Method, Response as WreqResponse, header as wreq_header};
 use wreq_util::{Emulation, EmulationOS, EmulationOption};
 
 const REDDIT_URL_BASE: &str = "https://oauth.reddit.com";
@@ -91,10 +91,10 @@ pub async fn canonical_path(path: String, tries: i8) -> Result<Option<String>, S
 		let mut res = None;
 		for (url_base, url_base_host) in URL_PAIRS {
 			res = reddit_short_head(path.clone(), true, url_base, url_base_host).await.ok();
-			if let Some(res) = &res {
-				if !res.status().is_client_error() {
-					break;
-				}
+			if let Some(res) = &res
+				&& !res.status().is_client_error()
+			{
+				break;
 			}
 		}
 		res
@@ -384,12 +384,11 @@ pub async fn json(path: String, quarantine: bool) -> Result<Value, String> {
 							let json: Value = value;
 
 							// If user is suspended
-							if let Some(data) = json.get("data") {
-								if let Some(is_suspended) = data.get("is_suspended").and_then(Value::as_bool) {
-									if is_suspended {
-										return Err("suspended".into());
-									}
-								}
+							if let Some(data) = json.get("data")
+								&& let Some(is_suspended) = data.get("is_suspended").and_then(Value::as_bool)
+								&& is_suspended
+							{
+								return Err("suspended".into());
 							}
 
 							// If Reddit returned an error

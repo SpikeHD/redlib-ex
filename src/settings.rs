@@ -5,7 +5,7 @@ use std::collections::HashMap;
 // CRATES
 use crate::server::ResponseExt;
 use crate::subreddit::join_until_size_limit;
-use crate::utils::{deflate_decompress, redirect, template, Preferences};
+use crate::utils::{Preferences, deflate_decompress, redirect, template};
 use askama::Template;
 use cookie::Cookie;
 use futures_lite::StreamExt;
@@ -48,7 +48,7 @@ const PREFS: [&str; 21] = [
 	"geo_filter",
 ];
 
-pub static GEO_FILTERS: [&'static str; 250] = [
+pub static GEO_FILTERS: [&str; 250] = [
 	"GLOBAL", "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX", "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM",
 	"BN", "BO", "BQ", "BR", "BS", "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK", "CL", "CM", "CN", "CO", "CR", "CU", "CV", "CW", "CX", "CY",
 	"CZ", "DE", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE", "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO", "FR", "GA", "GB", "GD", "GE", "GF", "GG", "GH", "GI",
@@ -133,11 +133,7 @@ fn set_cookies_method(req: Request<Body>, remove_cookies: bool) -> Response<Body
 	let path = match form.get("redirect") {
 		Some(value) => {
 			let value = value.replace("%26", "&").replace("%23", "#");
-			if value.starts_with('/') {
-				value
-			} else {
-				format!("/{value}")
-			}
+			if value.starts_with('/') { value } else { format!("/{value}") }
 		}
 		None => "/".to_string(),
 	};

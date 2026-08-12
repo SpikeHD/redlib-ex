@@ -2,7 +2,7 @@ use hyper::{Body, Request, Response};
 use serde_json::Value;
 use std::sync::LazyLock;
 
-use crate::client::{proxy, CLIENT};
+use crate::client::{CLIENT, proxy};
 use crate::server::RequestExt;
 
 // RedGifs token cache: (token, expiry_timestamp)
@@ -23,22 +23,20 @@ pub async fn handler(req: Request<Body>) -> Result<Response<Body>, String> {
 	match fetch_video_url(&format!("https://www.redgifs.com/watch/{}", path)).await.ok() {
 		Some(video_url) => {
 			let filename = video_url.strip_prefix("https://media.redgifs.com/").unwrap_or(&video_url);
-			Ok(Response::builder()
-				.status(302)
-				.header("Location", format!("/redgifs/{}", filename))
-				.body(Body::empty())
-				.unwrap_or_default())
+			Ok(
+				Response::builder()
+					.status(302)
+					.header("Location", format!("/redgifs/{}", filename))
+					.body(Body::empty())
+					.unwrap_or_default(),
+			)
 		}
 		None => Ok(Response::builder().status(404).body("RedGifs video not found".into()).unwrap_or_default()),
 	}
 }
 
 async fn fetch_video_url(redgifs_url: &str) -> Result<String, String> {
-	let video_id = redgifs_url
-		.split('/')
-		.last()
-		.and_then(|s| s.split('?').next())
-		.ok_or("Invalid RedGifs URL")?;
+	let video_id = redgifs_url.split('/').next_back().and_then(|s| s.split('?').next()).ok_or("Invalid RedGifs URL")?;
 
 	let token = get_token().await?;
 	let api_url = format!("https://api.redgifs.com/v2/gifs/{}?views=yes", video_id);
@@ -51,17 +49,11 @@ async fn fetch_video_url(redgifs_url: &str) -> Result<String, String> {
 	let hd_url = json["gif"]["urls"]["hd"].as_str();
 	let sd_url = json["gif"]["urls"]["sd"].as_str();
 
-	hd_url
-		.or(sd_url)
-		.map(String::from)
-		.ok_or_else(|| "No video URL in RedGifs response".to_string())
+	hd_url.or(sd_url).map(String::from).ok_or_else(|| "No video URL in RedGifs response".to_string())
 }
 
 async fn get_token() -> Result<String, String> {
-	let now = std::time::SystemTime::now()
-		.duration_since(std::time::UNIX_EPOCH)
-		.map_err(|_| "Time error")?
-		.as_secs() as i64;
+	let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| "Time error")?.as_secs() as i64;
 
 	// Return cached token if still valid (without holding lock across await)
 	{

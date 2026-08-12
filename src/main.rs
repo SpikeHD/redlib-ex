@@ -7,11 +7,11 @@ use clap::{Arg, ArgAction, Command};
 use std::sync::LazyLock;
 
 use futures_lite::FutureExt;
-use hyper::{header::HeaderValue, Body, Request, Response};
+use hyper::{Body, Request, Response, header::HeaderValue};
 use log::{info, warn};
-use redlib_ex::client::{canonical_path, proxy, rate_limit_check, CLIENT};
+use redlib_ex::client::{CLIENT, canonical_path, proxy, rate_limit_check};
 use redlib_ex::server::{self, RequestExt};
-use redlib_ex::utils::{error, redirect, ThemeAssets};
+use redlib_ex::utils::{ThemeAssets, error, redirect};
 use redlib_ex::{config, duplicates, headers, instance_info, post, search, settings, subreddit, user};
 
 use redlib_ex::client::OAUTH_CLIENT;
@@ -80,10 +80,8 @@ async fn resource(body: &str, content_type: &str, cache: bool) -> Result<Respons
 		.body(body.to_string().into())
 		.unwrap_or_default();
 
-	if cache {
-		if let Ok(val) = HeaderValue::from_str("public, max-age=1209600, s-maxage=86400") {
-			res.headers_mut().insert("Cache-Control", val);
-		}
+	if cache && let Ok(val) = HeaderValue::from_str("public, max-age=1209600, s-maxage=86400") {
+		res.headers_mut().insert("Cache-Control", val);
 	}
 
 	Ok(res)
@@ -221,10 +219,10 @@ async fn main() {
 			}
 	};
 
-	if let Some(expire_time) = hsts {
-		if let Ok(val) = HeaderValue::from_str(&format!("max-age={expire_time}")) {
-			app.default_headers.insert("Strict-Transport-Security", val);
-		}
+	if let Some(expire_time) = hsts
+		&& let Ok(val) = HeaderValue::from_str(&format!("max-age={expire_time}"))
+	{
+		app.default_headers.insert("Strict-Transport-Security", val);
 	}
 
 	// Read static files
@@ -266,7 +264,9 @@ async fn main() {
 		.at("/check_update.js")
 		.get(|_| resource(include_str!("../static/check_update.js"), "text/javascript", false).boxed());
 	app.at("/copy.js").get(|_| resource(include_str!("../static/copy.js"), "text/javascript", false).boxed());
-	app.at("/show_more.js").get(|_| resource(include_str!("../static/show_more.js"), "text/javascript", false).boxed());
+	app
+		.at("/show_more.js")
+		.get(|_| resource(include_str!("../static/show_more.js"), "text/javascript", false).boxed());
 
 	app.at("/commits.atom").get(|_| async move { proxy_commit_info().await }.boxed());
 	app.at("/instances.json").get(|_| async move { proxy_instances().await }.boxed());

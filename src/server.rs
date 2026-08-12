@@ -5,15 +5,14 @@ use brotli::enc::{BrotliCompress, BrotliEncoderParams};
 use cached::proc_macro::cached;
 use cookie::Cookie;
 use core::f64;
-use futures_lite::{future::Boxed, Future, FutureExt};
+use futures_lite::{Future, FutureExt, future::Boxed};
+use hyper::{Body, Method, Request, Response, Server as HyperServer};
 use hyper::{
-	body,
+	HeaderMap, body,
 	body::HttpBody,
 	header,
 	service::{make_service_fn, service_fn},
-	HeaderMap,
 };
-use hyper::{Body, Method, Request, Response, Server as HyperServer};
 use libflate::gzip;
 use route_recognizer::{Params, Router};
 use std::{
@@ -22,7 +21,7 @@ use std::{
 	io,
 	pin::Pin,
 	result::Result,
-	str::{from_utf8, Split},
+	str::{Split, from_utf8},
 	string::ToString,
 };
 use time::OffsetDateTime;
@@ -324,14 +323,12 @@ impl Server {
 					if match config::get_setting("REDLIB_ROBOTS_DISABLE_INDEXING") {
 						Some(val) => val == "on",
 						None => false,
-					} {
-						if let Some(user_agent) = req_headers.get("user-agent") {
-							if let Ok(user_agent_str) = user_agent.to_str() {
-								for banned in BANNED_USER_AGENTS {
-									if user_agent_str.contains(banned) {
-										return new_boilerplate(def_headers, req_headers, 403, Body::from("Forbidden")).boxed();
-									}
-								}
+					} && let Some(user_agent) = req_headers.get("user-agent")
+						&& let Ok(user_agent_str) = user_agent.to_str()
+					{
+						for banned in BANNED_USER_AGENTS {
+							if user_agent_str.contains(banned) {
+								return new_boilerplate(def_headers, req_headers, 403, Body::from("Forbidden")).boxed();
 							}
 						}
 					}
@@ -566,18 +563,14 @@ fn determine_compressor(accept_encoding: String) -> Option<CompressionType> {
 		// someone gave us the string "NAN", which (&str).parse::<f64>
 		// will happily translate to f64::NAN.
 		let new_candidate = CompressorCandidate { alg: compressor, q };
-		if let Some(ord) = new_candidate.partial_cmp(&cur_candidate) {
-			if ord == Ordering::Greater {
-				cur_candidate = new_candidate;
-			}
+		if let Some(ord) = new_candidate.partial_cmp(&cur_candidate)
+			&& ord == Ordering::Greater
+		{
+			cur_candidate = new_candidate;
 		};
 	}
 
-	if cur_candidate.q == f64::NEG_INFINITY {
-		None
-	} else {
-		Some(cur_candidate.alg)
-	}
+	if cur_candidate.q == f64::NEG_INFINITY { None } else { Some(cur_candidate.alg) }
 }
 
 /// Compress the response body, if possible or desirable. The Body will be

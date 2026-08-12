@@ -2,7 +2,7 @@ use crate::{
 	client::{CLIENT, OAUTH_CLIENT, OAUTH_IS_ROLLING_OVER, OAUTH_RATELIMIT_REMAINING},
 	oauth_resources::ANDROID_APP_VERSION_LIST,
 };
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use log::{error, info, trace, warn};
 use serde_json::json;
 use std::{collections::HashMap, sync::atomic::Ordering, time::Duration};
