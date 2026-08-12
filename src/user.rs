@@ -189,6 +189,9 @@ mod tests {
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_fetching_user() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		let user = user("spez").await;
 		assert!(user.is_ok());
 		assert!(user.unwrap().karma > 100);

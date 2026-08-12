@@ -700,12 +700,18 @@ mod tests {
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_fetching_subreddit() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		let subreddit = subreddit("rust", false).await;
 		assert!(subreddit.is_ok());
 	}
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_gated_and_quarantined() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		let quarantined = subreddit("edgy", true).await;
 		assert!(quarantined.is_ok());
 		let gated = subreddit("drugs", true).await;

@@ -343,7 +343,10 @@ impl OauthBackend for GenericWebAuth {
 		builder = builder.header("Accept", "*/*");
 		builder = builder.header("Accept-Language", "en-US,en;q=0.5");
 		// builder = builder.header("Accept-Encoding", "gzip, deflate, br, zstd");
-		builder = builder.header("Authorization", "Basic M1hmQkpXbGlIdnFBQ25YcmZJWWxMdzo=");
+		builder = builder.header(
+			"Authorization",
+			format!("Basic {}", general_purpose::STANDARD.encode(format!("{REDDIT_ANDROID_OAUTH_CLIENT_ID}:"))),
+		);
 		builder = builder.header("Content-Type", "application/x-www-form-urlencoded");
 		builder = builder.header("Sec-GPC", "1");
 		builder = builder.header("Connection", "keep-alive");
@@ -475,6 +478,9 @@ mod tests {
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_mobile_spoof_backend() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		// Test MobileSpoofAuth backend specifically
 		let mut backend = MobileSpoofAuth::new();
 		let response = backend.authenticate().await;
@@ -488,6 +494,9 @@ mod tests {
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_generic_web_backend() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		// Test GenericWebAuth backend specifically
 		let mut backend = GenericWebAuth::new();
 		let response = backend.authenticate().await;
@@ -500,17 +509,26 @@ mod tests {
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_oauth_client() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		// Integration test - tests the overall Oauth client
 		assert!(OAUTH_CLIENT.load_full().headers_map.contains_key("Authorization"));
 	}
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_oauth_client_refresh() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		force_refresh_token().await;
 	}
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_oauth_token_exists() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		let client = OAUTH_CLIENT.load_full();
 		let auth_header = client.headers_map.get("Authorization").unwrap();
 		assert!(auth_header.starts_with("Bearer "));
@@ -518,6 +536,9 @@ mod tests {
 
 	#[tokio::test(flavor = "multi_thread")]
 	async fn test_oauth_headers_len() {
+		if !crate::live_tests_enabled() {
+			return;
+		}
 		assert!(OAUTH_CLIENT.load_full().headers_map.len() >= 3);
 	}
 

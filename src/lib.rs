@@ -12,3 +12,9 @@ pub mod settings;
 pub mod subreddit;
 pub mod user;
 pub mod utils;
+
+#[cfg(test)]
+#[doc(hidden)]
+pub fn live_tests_enabled() -> bool {
+	std::env::var("REDLIB_LIVE_TESTS").is_ok()
+}
