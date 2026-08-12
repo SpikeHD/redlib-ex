@@ -16,4 +16,4 @@ EXPOSE 8080
 # Run a healthcheck every minute to make sure redlib is functional
 HEALTHCHECK --interval=1m --timeout=3s CMD wget --spider -q http://localhost:8080/settings || exit 1
 
-CMD ["redlib"]
+CMD ["redlib-ex"]

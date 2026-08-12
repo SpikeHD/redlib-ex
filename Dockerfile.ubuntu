@@ -16,12 +16,12 @@ WORKDIR /redlib
 # download (most) dependencies in their own layer
 COPY Cargo.lock Cargo.toml ./
 RUN mkdir src && echo "fn main() { panic!(\"why am i running?\") }" > src/main.rs
-RUN cargo build --release --locked --bin redlib
+RUN cargo build --release --locked --bin redlib-ex
 RUN rm ./src/main.rs && rmdir ./src
 
 # copy the source and build the redlib binary
 COPY . ./
-RUN cargo build --release --locked --bin redlib
+RUN cargo build --release --locked --bin redlib-ex
 RUN echo "finished building redlib!"
 
 ########################
@@ -30,7 +30,7 @@ RUN echo "finished building redlib!"
 FROM ubuntu:${UBUNTU_RELEASE_VERSION} AS release
 
 # Import redlib binary from builder
-COPY --from=builder /redlib/target/release/redlib /usr/local/bin/redlib
+COPY --from=builder /redlib/target/release/redlib-ex /usr/local/bin/redlib-ex
 
 # Add non-root user for running redlib
 RUN useradd \
@@ -49,4 +49,4 @@ HEALTHCHECK --interval=1m --timeout=3s CMD wget --spider -q http://localhost:808
 # Add container metadata
 LABEL org.opencontainers.image.authors="sigaloid"
 
-CMD ["redlib"]
+CMD ["redlib-ex"]

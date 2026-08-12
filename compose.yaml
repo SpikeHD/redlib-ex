@@ -1,6 +1,8 @@
 services:
   redlib:
-    image: quay.io/redlib/redlib:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.alpine
     restart: always
     container_name: "redlib"
     ports:

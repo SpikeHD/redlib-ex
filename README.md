@@ -6,12 +6,12 @@
 
 ---
 
-**10-second pitch:** Redlib is a private front-end like [Invidious](https://github.com/iv-org/invidious) but for Reddit. Browse the coldest takes of [r/unpopularopinion](https://farside.link/redlib/r/unpopularopinion) without being [tracked](#reddit).
+Redlib is a private front-end like [Invidious](https://github.com/iv-org/invidious), but for Reddit.
 
-- 🚀 Fast: written in Rust for blazing-fast speeds and memory safety
-- ☁️ Light: no JavaScript, no ads, no tracking, no bloat
-- 🕵 Private: all requests are proxied through the server, including media
-- 🔒 Secure: strong [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) prevents browser requests to Reddit
+- **Fast**: Written in async Rust 
+- **Light**: no JavaScript required[^1], no ads, no tracking, no bloat
+- **Private**: all requests are proxied through the server, including media
+- **Secure**: strong [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) prevents browser requests to Reddit
 
 ---
 
@@ -53,7 +53,7 @@
 > [!TIP]
 > 🔗 **Want to automatically redirect Reddit links to Redlib? Use [LibRedirect](https://github.com/libredirect/libredirect) or [Privacy Redirect](https://github.com/SimonBrazell/privacy-redirect)!**
 
-An up-to-date table of instances is available in [Markdown](https://github.com/redlib-org/redlib-instances/blob/main/instances.md) and [machine-readable JSON](https://github.com/redlib-org/redlib-instances/blob/main/instances.json).
+A table of instances is available in [Markdown](https://github.com/redlib-org/redlib-instances/blob/main/instances.md) and [machine-readable JSON](https://github.com/redlib-org/redlib-instances/blob/main/instances.json).
 
 Both files are part of the [redlib-instances](https://github.com/redlib-org/redlib-instances) repository. To contribute your [self-hosted instance](#deployment) to the list, see the [redlib-instances README](https://github.com/redlib-org/redlib-instances/blob/main/README.md).
 
@@ -64,7 +64,7 @@ For information on instance uptime, see the [Uptime Robot status page](https://s
 # About
 
 > [!NOTE]
-> Find Redlib on 💬 [Matrix](https://matrix.to/#/#redlib:matrix.org), 🐋 [Quay.io](https://quay.io/repository/redlib/redlib), :octocat: [GitHub](https://github.com/redlib-org/redlib), and 🦊 [GitLab](https://gitlab.com/redlib/redlib).
+> Find Redlib on [Matrix](https://matrix.to/#/#redlib:matrix.org), [Quay.io](https://quay.io/repository/redlib/redlib), and [GitHub](https://github.com/SpikeHD/redlib-ex).
 
 Redlib hopes to provide an easier way to browse Reddit, without the ads, trackers, and bloat. Redlib was inspired by other alternative front-ends to popular services such as [Invidious](https://github.com/iv-org/invidious) for YouTube, [Nitter](https://github.com/zedeus/nitter) for Twitter, and [Bibliogram](https://sr.ht/~cadence/bibliogram/) for Instagram.
 
@@ -198,15 +198,17 @@ docker logs -f redlib
 Deploy Redlib:
 
 ```bash
-docker pull quay.io/redlib/redlib:latest
-docker run -d --name redlib -p 8080:8080 quay.io/redlib/redlib:latest
+# Or Dockerfile.ubuntu
+docker build -t local/redlib -f Dockerfile.alpine .
+docker run -d --name redlib -p 8080:8080 local/redlib
 ```
 
 Deploy using a different port on the host (in this case, port 80):
 
 ```bash
-docker pull quay.io/redlib/redlib:latest
-docker run -d --name redlib -p 80:8080 quay.io/redlib/redlib:latest
+# Or Dockerfile.ubuntu
+docker build -t local/redlib -f Dockerfile.alpine .
+docker run -d --name redlib -p 80:8080 local/redlib
 ```
 
 If you're using a reverse proxy in front of Redlib, prefix the port numbers with `127.0.0.1` so that Redlib only listens on the host port **locally**. For example, if the host port for Redlib is `8080`, specify `127.0.0.1:8080:8080`.
@@ -484,3 +486,5 @@ winget install -i LLVM.LLVM
 # For tests.
 winget install GoLang.Go
 ```
+
+[^1]: JavaScript is used for optional features, should they be desired
