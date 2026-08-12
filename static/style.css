@@ -1267,13 +1267,40 @@ a.search_subreddit:hover {
     padding: 15px 0 5px;
 }
 
-/* Used only for text post preview */
-.post_preview {
+/* Prevent the flexible title row from absorbing the body's growth on expand */
+.post:has(.post_preview_wrap) {
+    grid-template-rows: auto auto auto auto auto auto auto;
+}
+
+/* Used only for text post preview, and only applied once JS detects overflow. */
+.post_body.clamped .post_preview {
     -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
     mask-image: linear-gradient(180deg, #000 60%, transparent);
     opacity: 0.8;
     max-height: 250px;
     overflow: hidden;
+}
+
+.post_show_more {
+    display: block;
+    width: 100%;
+    padding: 4px 0;
+    margin-top: 4px;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+.post_show_more[hidden] {
+    display: none;
+}
+
+.post_show_more:hover {
+    opacity: 1;
+    text-decoration: underline;
 }
 
 .post_footer {

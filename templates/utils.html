@@ -279,8 +279,11 @@
     &#x2022;
     {% endif %}
     <span class="label"> Upvotes</span></div>
-	<div class="post_body post_preview">
-		{{ post.body|safe }}
+	<div class="post_body post_preview_wrap">
+		<div class="post_preview">
+			{{ post.body|safe }}
+		</div>
+		<button class="post_show_more" type="button" hidden>Show More</button>
 	</div>
 
 	{% call poll(post) %}
