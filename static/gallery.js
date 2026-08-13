@@ -11,12 +11,18 @@ function initGallery(container) {
 	let index = 0;
 
 	function show(i) {
-		index = (i + items.length) % items.length;
+		index = Math.max(0, Math.min(items.length - 1, i));
 		items.forEach((item, n) => {
 			item.style.display = n === index ? "" : "none";
 		});
 		if (counter) {
 			counter.textContent = `${index + 1} / ${items.length}`;
+		}
+		if (prev) {
+			prev.disabled = index === 0;
+		}
+		if (next) {
+			next.disabled = index === items.length - 1;
 		}
 	}
 

@@ -135,7 +135,7 @@
   	</div>
 	{% for image in post.gallery -%}
 		<figure class="gallery_item">
-			<a href="{{ image.url }}" ><img loading="lazy" alt="Gallery image" src="{{ image.url }}"/></a>
+			<a href="{{ image.url }}" ><img loading="lazy" alt="Gallery image" src="{{ image.url }}" style="width:100%;height:auto;{% if image.width > 0 && image.height > 0 %}aspect-ratio:{{ image.width }}/{{ image.height }};{% endif %}"/></a>
 			<figcaption>
 				<p>{{ image.caption }}</p>
 				{% if image.outbound_url.len() > 0 %}
@@ -149,7 +149,7 @@
 	<div class="gallery">
 	{% for image in post.gallery -%}
 		<figure>
-			<a href="{{ image.url }}" ><img loading="lazy" alt="Gallery image" src="{{ image.url }}"/></a>
+			<a href="{{ image.url }}" ><img loading="lazy" alt="Gallery image" src="{{ image.url }}" style="width:100%;height:auto;{% if image.width > 0 && image.height > 0 %}aspect-ratio:{{ image.width }}/{{ image.height }};{% endif %}"/></a>
 			<figcaption>
 				<p>{{ image.caption }}</p>
 				{% if image.outbound_url.len() > 0 %}
@@ -290,7 +290,7 @@
       <span class="gallery_counter" data-gallery-counter></span>
     </div>
 	{% for image in post.gallery -%}
-		<a class="gallery_item" href="{{ image.url }}" rel="nofollow">
+		<a class="gallery_item" href="{{ image.url }}" rel="nofollow" {% if image.width > 0 && image.height > 0 %}style="aspect-ratio:{{ image.width }}/{{ image.height }};"{% endif %}>
 			<img loading="lazy" alt="Gallery image" src="{{ image.url }}"/>
 		</a>
 	{%- endfor %}
