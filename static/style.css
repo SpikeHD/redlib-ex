@@ -1117,10 +1117,9 @@ a.search_subreddit:hover {
 .post_media_content,
 .post .__NoScript_PlaceHolder__,
 .gallery {
-    max-width: calc(100% - 40px);
+    width: calc(100% - 40px);
     grid-area: post_media;
-    margin: 15px auto 5px auto;
-    width: auto;
+    margin: 15px auto 15px auto;
     height: auto;
     overflow: hidden;
 }
@@ -1185,6 +1184,42 @@ a.search_subreddit:hover {
 .gallery img {
     max-width: 100%;
     vertical-align: bottom;
+}
+
+.gallery_nav .gallery_item {
+    margin: 0;
+}
+
+.gallery_controls_container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.gallery_controls {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+}
+
+.gallery-controls [type="button"] {
+  cursor: pointer;
+}
+
+.gallery_counter {
+    min-width: 4em;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.gallery_nav.gallery_thumb .gallery_item img {
+    max-height: 256px;
+    margin: 0 auto;
+    display: block;
 }
 
 .gallery .outbound_url {

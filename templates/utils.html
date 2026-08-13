@@ -124,6 +124,28 @@
 	{% call render_hls_notification(post.permalink[1..]) %}
 	{% endif %}
 	{% else if post.post_type == "gallery" %}
+	{% if prefs.gallery_controls == "on" %}
+	<div class="gallery gallery_nav" data-gallery>
+  	<div class="gallery_controls_container">
+  	  <div class="gallery_controls">
+  			<button class="gallery_prev" type="button" data-gallery-prev>&lt; prev</button>
+  			<button class="gallery_next" type="button" data-gallery-next>next &gt;</button>
+  		</div>
+  		<span class="gallery_counter" data-gallery-counter></span>
+  	</div>
+	{% for image in post.gallery -%}
+		<figure class="gallery_item">
+			<a href="{{ image.url }}" ><img loading="lazy" alt="Gallery image" src="{{ image.url }}"/></a>
+			<figcaption>
+				<p>{{ image.caption }}</p>
+				{% if image.outbound_url.len() > 0 %}
+				<p><a class="outbound_url" href="{{ image.outbound_url }}" rel="nofollow">{{ image.outbound_url }}</a>
+				{% endif %}
+			</figcaption>
+		</figure>
+	{%- endfor %}
+	</div>
+	{% else %}
 	<div class="gallery">
 	{% for image in post.gallery -%}
 		<figure>
@@ -137,6 +159,7 @@
 		</figure>
 	{%- endfor %}
 	</div>
+	{% endif %}
 	{% else if post.post_type == "link" %}
 	<a id="post_url" href="{{ post.media.url }}" rel="nofollow">{{ post.media.url }}</a>
 	{% endif %}
@@ -257,6 +280,21 @@
 	</div>
 	{% call render_hls_notification(format!("{}%23{}", &self.url[1..].replace("&", "%26").replace("+", "%2B"), post.id)) %}
 	{% endif %}
+	{% else if post.post_type == "gallery" && prefs.gallery_controls == "on" %}
+	<div class="gallery gallery_nav gallery_thumb" data-gallery>
+	  <div class="gallery_controls_container">
+      <div class="gallery_controls">
+        <button class="gallery_prev" type="button" data-gallery-prev>&lt; prev</button>
+        <button class="gallery_next" type="button" data-gallery-next>next &gt;</button>
+      </div>
+      <span class="gallery_counter" data-gallery-counter></span>
+    </div>
+	{% for image in post.gallery -%}
+		<a class="gallery_item" href="{{ image.url }}" rel="nofollow">
+			<img loading="lazy" alt="Gallery image" src="{{ image.url }}"/>
+		</a>
+	{%- endfor %}
+	</div>
 	{% else if post.post_type != "self" %}
 	<a class="post_thumbnail{% if post.thumbnail.url.is_empty() %} no_thumbnail{% endif %}" href="{% if post.post_type == "link" %}{{ post.media.url }}{% else %}{{ post.permalink }}{% endif %}" rel="nofollow">
 		{% if post.thumbnail.url.is_empty() %}

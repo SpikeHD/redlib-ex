@@ -631,7 +631,7 @@ pub struct Params {
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, PartialEq, Eq)]
-#[revisioned(revision = 2)]
+#[revisioned(revision = 3)]
 pub struct Preferences {
 	#[revision(start = 1)]
 	#[serde(skip_serializing, skip_deserializing)]
@@ -684,6 +684,8 @@ pub struct Preferences {
 	pub clean_urls: String,
 	#[revision(start = 1)]
 	pub geo_filter: String,
+	#[revision(start = 3, default_fn = "default_gallery_controls")]
+	pub gallery_controls: String,
 }
 
 fn serialize_vec_with_plus<S>(vec: &[String], serializer: S) -> Result<S::Ok, S::Error>
@@ -744,6 +746,7 @@ impl Preferences {
 			remove_default_feeds: setting(req, "remove_default_feeds"),
 			clean_urls: setting(req, "clean_urls"),
 			geo_filter: setting(req, "geo_filter"),
+			gallery_controls: setting_or_default(req, "gallery_controls", "on".to_string()),
 		}
 	}
 
@@ -762,6 +765,9 @@ impl Preferences {
 	}
 	fn default_clean_urls(_revision: u16) -> Result<String, Error> {
 		Ok("off".to_owned())
+	}
+	fn default_gallery_controls(_revision: u16) -> Result<String, Error> {
+		Ok("on".to_owned())
 	}
 }
 

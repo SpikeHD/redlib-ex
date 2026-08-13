@@ -157,6 +157,12 @@
 					<input type="checkbox" name="clean_urls" {% if
 						prefs.clean_urls=="on" %}checked{% endif %}>
 				</div>
+				<div class="prefs-group">
+					<label for="gallery_controls" title="When enabled, gallery posts display one image at a time with prev/next buttons instead of all images at once">Gallery prev/next buttons</label>
+					<input type="hidden" value="off" name="gallery_controls">
+					<input type="checkbox" name="gallery_controls" id="gallery_controls" {% if
+						prefs.gallery_controls=="on" %}checked{% endif %}>
+				</div>
 			</fieldset>
 			<input id="save" type="submit" value="Save">
 		</div>

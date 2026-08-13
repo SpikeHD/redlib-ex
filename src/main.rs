@@ -265,6 +265,9 @@ async fn main() {
 		.get(|_| resource(include_str!("../static/check_update.js"), "text/javascript", false).boxed());
 	app.at("/copy.js").get(|_| resource(include_str!("../static/copy.js"), "text/javascript", false).boxed());
 	app
+		.at("/gallery.js")
+		.get(|_| resource(include_str!("../static/gallery.js"), "text/javascript", false).boxed());
+	app
 		.at("/show_more.js")
 		.get(|_| resource(include_str!("../static/show_more.js"), "text/javascript", false).boxed());
 
