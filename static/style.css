@@ -590,6 +590,7 @@ aside {
     box-sizing: border-box;
     font-size: 15px;
     display: inline-block;
+    cursor: pointer;
 }
 
 #feeds > summary {
