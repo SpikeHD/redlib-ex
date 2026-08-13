@@ -73,9 +73,9 @@ pub struct Oauth {
 impl Oauth {
 	/// Create a new OAuth client
 	pub(crate) async fn new() -> Self {
-		// Try MobileSpoofAuth first, then fall back to GenericWebAuth
+		// Try Generic first, then fall back to MobileSpoof
 		let mut failure_count = 0;
-		let mut backend = OauthBackendImpl::MobileSpoof(MobileSpoofAuth::new());
+		let mut backend = OauthBackendImpl::GenericWeb(GenericWebAuth::new());
 
 		loop {
 			let attempt = Self::new_with_timeout_with_backend(backend.clone()).await;
@@ -104,7 +104,7 @@ impl Oauth {
 			// Switch to GenericWeb after 5 failures with MobileSpoof
 			if matches!(backend, OauthBackendImpl::MobileSpoof(_)) && failure_count >= 5 {
 				warn!("[🔄] MobileSpoofAuth failed 5 times. Falling back to GenericWebAuth...");
-				backend = OauthBackendImpl::GenericWeb(GenericWebAuth::new());
+				backend = OauthBackendImpl::MobileSpoof(MobileSpoofAuth::new());
 			}
 
 			// Crash after 10 total failures
