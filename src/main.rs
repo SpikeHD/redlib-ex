@@ -7,9 +7,10 @@ use clap::{Arg, ArgAction, Command};
 use std::sync::LazyLock;
 
 use futures_lite::FutureExt;
-use hyper::{Body, Request, Response, header::HeaderValue};
+use hyper::{Body, Request, Response, Uri, header::HeaderValue};
 use log::{info, warn};
 use redlib_ex::client::{CLIENT, canonical_path, proxy, rate_limit_check};
+use redlib_ex::http::ResponseExt;
 use redlib_ex::server::{self, RequestExt};
 use redlib_ex::utils::{ThemeAssets, error, redirect};
 use redlib_ex::{config, duplicates, headers, instance_info, post, search, settings, subreddit, user};
@@ -468,7 +469,14 @@ pub async fn proxy_commit_info() -> Result<Response<Body>, String> {
 async fn fetch_commit_info() -> String {
 	let url = "https://github.com/spikehd/redlib/commits/main.atom";
 
-	CLIENT.get(url).send().await.expect("Failed to request GitHub").text().await.expect("Failed to read body")
+	CLIENT
+		.get(Uri::try_from(url).expect("valid URL"))
+		.send()
+		.await
+		.expect("Failed to request GitHub")
+		.text()
+		.await
+		.expect("Failed to read body")
 }
 
 pub async fn proxy_instances() -> Result<Response<Body>, String> {
@@ -485,5 +493,12 @@ pub async fn proxy_instances() -> Result<Response<Body>, String> {
 async fn fetch_instances() -> String {
 	let url = "https://raw.githubusercontent.com/redlib-org/redlib-instances/refs/heads/main/instances.json";
 
-	CLIENT.get(url).send().await.expect("Failed to request GitHub").text().await.expect("Failed to read body")
+	CLIENT
+		.get(Uri::try_from(url).expect("valid URL"))
+		.send()
+		.await
+		.expect("Failed to request GitHub")
+		.text()
+		.await
+		.expect("Failed to read body")
 }

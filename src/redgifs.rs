@@ -3,6 +3,7 @@ use serde_json::Value;
 use std::sync::LazyLock;
 
 use crate::client::{CLIENT, proxy};
+use crate::http::{RequestBuilder, ResponseExt};
 use crate::server::RequestExt;
 
 // RedGifs token cache: (token, expiry_timestamp)
@@ -74,9 +75,9 @@ async fn get_token() -> Result<String, String> {
 	Ok(token)
 }
 
-fn create_request(url: &str, token: Option<&str>) -> Result<wreq::RequestBuilder, String> {
+fn create_request(url: &str, token: Option<&str>) -> Result<RequestBuilder, String> {
 	let mut builder = CLIENT
-		.get(wreq::Uri::try_from(url).map_err(|_| "Couldn't parse URL".to_string())?)
+		.get(hyper::Uri::try_from(url).map_err(|_| "Couldn't parse URL".to_string())?)
 		.header("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
 		.header("referer", "https://www.redgifs.com/")
 		.header("origin", "https://www.redgifs.com")

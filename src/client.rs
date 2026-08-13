@@ -6,17 +6,14 @@ use arc_swap::ArcSwap;
 use cached::proc_macro::cached;
 use futures_lite::future::block_on;
 use futures_lite::{FutureExt, future::Boxed};
-use hyper::{Body, Request as HyperRequest, Response as HyperResponse, body::Buf, header};
-use log::{error, info, trace, warn};
+use hyper::{Body, Method, Request as HyperRequest, Response as HyperResponse, Response, body::Buf, header};
+use log::{error, trace, warn};
 use percent_encoding::{CONTROLS, percent_encode};
 use serde_json::Value;
 use std::result::Result;
 use std::sync::LazyLock;
 use std::sync::atomic::Ordering;
 use std::sync::atomic::{AtomicBool, AtomicU16};
-use wreq::redirect::Policy;
-use wreq::{Client as WreqClient, EmulationFactory, Method, Response as WreqResponse, header as wreq_header};
-use wreq_util::{Emulation, EmulationOS, EmulationOption};
 
 const REDDIT_URL_BASE: &str = "https://oauth.reddit.com";
 const REDDIT_URL_BASE_HOST: &str = "oauth.reddit.com";
@@ -27,7 +24,7 @@ const REDDIT_SHORT_URL_BASE_HOST: &str = "redd.it";
 const ALTERNATIVE_REDDIT_URL_BASE: &str = "https://www.reddit.com";
 const ALTERNATIVE_REDDIT_URL_BASE_HOST: &str = "www.reddit.com";
 
-pub static CLIENT: LazyLock<WreqClient> = LazyLock::new(build_client);
+pub use crate::http::CLIENT;
 
 pub static OAUTH_CLIENT: LazyLock<ArcSwap<Oauth>> = LazyLock::new(|| {
 	let client = block_on(Oauth::new());
@@ -43,28 +40,6 @@ const URL_PAIRS: [(&str, &str); 2] = [
 	(ALTERNATIVE_REDDIT_URL_BASE, ALTERNATIVE_REDDIT_URL_BASE_HOST),
 	(REDDIT_SHORT_URL_BASE, REDDIT_SHORT_URL_BASE_HOST),
 ];
-
-pub fn build_client() -> WreqClient {
-	// Keeping this list short to aid in privacy.
-	// The more emulations, the more unique a fingerprint each instance has.
-	// But some emulations should increase evasiveness.
-	let emulation = [Emulation::Chrome145, Emulation::Firefox147];
-	let emulation_os = [EmulationOS::Android, EmulationOS::Windows];
-
-	let rand = fastrand::usize(..);
-	let emulation = EmulationOption::builder()
-		.emulation(emulation[rand % emulation.len()])
-		.emulation_os(emulation_os[rand % emulation_os.len()])
-		.build()
-		.emulation();
-
-	info!("Building Wreq client with random emulation {:?}", emulation);
-	WreqClient::builder()
-		.emulation(emulation)
-		.redirect(Policy::none())
-		.build()
-		.expect("Should always be able to build a client")
-}
 
 /// Gets the canonical path for a resource on Reddit. This is accomplished by
 /// making a `HEAD` request to Reddit at the path given in `path`.
@@ -102,14 +77,14 @@ pub async fn canonical_path(path: String, tries: i8) -> Result<Option<String>, S
 
 	let res = res.ok_or_else(|| "Unable to make HEAD request to Reddit.".to_string())?;
 	let status = res.status().as_u16();
-	let policy_error = res.headers().get(wreq_header::RETRY_AFTER).is_some();
+	let policy_error = res.headers().get(header::RETRY_AFTER).is_some();
 
 	match status {
 		// If Reddit responds with a 2xx, then the path is already canonical.
 		200..=299 => Ok(Some(path)),
 
 		// If Reddit responds with a 301, then the path is redirected.
-		301 => match res.headers().get(wreq_header::LOCATION) {
+		301 => match res.headers().get(header::LOCATION) {
 			Some(val) => {
 				let Ok(original) = val.to_str() else {
 					return Err("Unable to decode Location header.".to_string());
@@ -147,7 +122,7 @@ pub async fn canonical_path(path: String, tries: i8) -> Result<Option<String>, S
 		_ => Ok(
 			res
 				.headers()
-				.get(wreq_header::LOCATION)
+				.get(header::LOCATION)
 				.map(|val| percent_encode(val.as_bytes(), CONTROLS).to_string().trim_start_matches(REDDIT_URL_BASE).to_string()),
 		),
 	}
@@ -163,7 +138,7 @@ pub async fn proxy(req: HyperRequest<Body>, format: &str) -> Result<HyperRespons
 	}
 
 	// First parameter is target URL (mandatory).
-	let wreq_uri = wreq::Uri::try_from(url).map_err(|_| "Couldn't parse URL".to_string())?;
+	let wreq_uri = hyper::Uri::try_from(url).map_err(|_| "Couldn't parse URL".to_string())?;
 
 	let mut builder = CLIENT.get(wreq_uri);
 
@@ -181,7 +156,7 @@ pub async fn proxy(req: HyperRequest<Body>, format: &str) -> Result<HyperRespons
 	}
 
 	// This is needed or Reddit will redirect us to a /media landing page that just renders the image.
-	builder = builder.header(wreq_header::ACCEPT, "*/*");
+	builder = builder.header(header::ACCEPT, "*/*");
 
 	builder
 		.send()
@@ -204,19 +179,19 @@ pub async fn proxy(req: HyperRequest<Body>, format: &str) -> Result<HyperRespons
 			rm("Nel");
 			rm("Report-To");
 
-			res.into_hyper_response()
+			res
 		})
 		.map_err(|e| e.to_string())
 }
 
 /// Makes a GET request to Reddit at `path`. By default, this will honor HTTP
 /// 3xx codes Reddit returns and will automatically redirect.
-fn reddit_get(path: String, quarantine: bool) -> Boxed<Result<WreqResponse, String>> {
+fn reddit_get(path: String, quarantine: bool) -> Boxed<Result<Response<Body>, String>> {
 	request(&Method::GET, path, true, quarantine, REDDIT_URL_BASE, REDDIT_URL_BASE_HOST)
 }
 
 /// Makes a HEAD request to Reddit at `path, using the short URL base. This will not follow redirects.
-fn reddit_short_head(path: String, quarantine: bool, base_path: &'static str, host: &'static str) -> Boxed<Result<WreqResponse, String>> {
+fn reddit_short_head(path: String, quarantine: bool, base_path: &'static str, host: &'static str) -> Boxed<Result<Response<Body>, String>> {
 	request(&Method::HEAD, path, false, quarantine, base_path, host)
 }
 
@@ -229,7 +204,7 @@ fn reddit_short_head(path: String, quarantine: bool, base_path: &'static str, ho
 /// Makes a request to Reddit. If `redirect` is `true`, `request_with_redirect`
 /// will recurse on the URL that Reddit provides in the Location HTTP header
 /// in its response.
-fn request(method: &'static Method, path: String, redirect: bool, quarantine: bool, base_path: &'static str, host: &'static str) -> Boxed<Result<WreqResponse, String>> {
+fn request(method: &'static Method, path: String, redirect: bool, quarantine: bool, base_path: &'static str, host: &'static str) -> Boxed<Result<Response<Body>, String>> {
 	// Build Reddit URL from path.
 	let url = format!("{base_path}{path}");
 
@@ -255,13 +230,18 @@ fn request(method: &'static Method, path: String, redirect: bool, quarantine: bo
 	// shuffle headers: https://github.com/redlib-org/redlib/issues/324
 	fastrand::shuffle(&mut headers);
 
-	let mut builder = CLIENT.request(method.clone(), &url);
-
-	for (key, value) in headers {
-		builder = builder.header(key, value);
-	}
-
 	async move {
+		let uri = match hyper::Uri::try_from(url.clone()) {
+			Ok(uri) => uri,
+			Err(e) => return Err(format!("Couldn't parse URL: {url}: {e}")),
+		};
+
+		let mut builder = CLIENT.request(method.clone(), uri);
+
+		for (key, value) in headers {
+			builder = builder.header(key, value);
+		}
+
 		match builder.send().await {
 			Ok(response) => {
 				// Reddit may respond with a 3xx. Decide whether or not to
@@ -270,7 +250,7 @@ fn request(method: &'static Method, path: String, redirect: bool, quarantine: bo
 					if !redirect {
 						return Ok(response);
 					};
-					let location_header = response.headers().get(wreq::header::LOCATION);
+					let location_header = response.headers().get(header::LOCATION);
 					if location_header.and_then(|h| h.to_str().ok()) == Some(ALTERNATIVE_REDDIT_URL_BASE) {
 						return Err("Reddit response was invalid".to_string());
 					}
@@ -362,7 +342,7 @@ pub async fn json(path: String, quarantine: bool) -> Result<Value, String> {
 			};
 
 			// asynchronously aggregate the chunks of the body
-			match hyper::body::aggregate(response.into_hyper_response()).await {
+			match hyper::body::aggregate(response.into_body()).await {
 				Ok(body) => {
 					let has_remaining = body.has_remaining();
 
@@ -472,35 +452,6 @@ pub async fn rate_limit_check() -> Result<(), String> {
 	}
 
 	Ok(())
-}
-
-trait IntoHyperResponse {
-	fn into_hyper_response(self) -> HyperResponse<Body>;
-}
-
-impl IntoHyperResponse for WreqResponse {
-	fn into_hyper_response(self) -> HyperResponse<Body> {
-		let status = self.status();
-		let version = self.version();
-
-		let mut builder = HyperResponse::builder().status(status.as_u16()).version(match version {
-			wreq::Version::HTTP_09 => hyper::Version::HTTP_09,
-			wreq::Version::HTTP_10 => hyper::Version::HTTP_10,
-			wreq::Version::HTTP_11 => hyper::Version::HTTP_11,
-			wreq::Version::HTTP_2 => hyper::Version::HTTP_2,
-			wreq::Version::HTTP_3 => hyper::Version::HTTP_3,
-			_ => hyper::Version::HTTP_11,
-		});
-
-		for (name, value) in self.headers() {
-			builder = builder.header(
-				header::HeaderName::from_bytes(name.as_str().as_bytes()).unwrap(),
-				header::HeaderValue::from_bytes(value.as_bytes()).unwrap(),
-			);
-		}
-
-		builder.body(Body::wrap_stream(self.bytes_stream())).unwrap()
-	}
 }
 
 #[cfg(test)]

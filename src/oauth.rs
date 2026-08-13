@@ -1,8 +1,10 @@
 use crate::{
-	client::{CLIENT, OAUTH_CLIENT, OAUTH_IS_ROLLING_OVER, OAUTH_RATELIMIT_REMAINING},
+	client::{OAUTH_CLIENT, OAUTH_IS_ROLLING_OVER, OAUTH_RATELIMIT_REMAINING},
+	http::{self, CLIENT, ResponseExt},
 	oauth_resources::ANDROID_APP_VERSION_LIST,
 };
 use base64::{Engine as _, engine::general_purpose};
+use hyper::{Body, Response as HyperResponse, Uri};
 use log::{error, info, trace, warn};
 use serde_json::json;
 use std::{collections::HashMap, sync::atomic::Ordering, time::Duration};
@@ -86,7 +88,7 @@ impl Oauth {
 					error!(
 						"[⛔] Failed to create OAuth client: {}. Retrying in 5 seconds...",
 						match e {
-							AuthError::Wreq(error) => error.to_string(),
+							AuthError::Http(error) => error.to_string(),
 							AuthError::SerdeDeserialize(error) => error.to_string(),
 							AuthError::Field((value, error)) => format!("{error}\n{value}"),
 						}
@@ -140,14 +142,14 @@ impl Oauth {
 
 #[derive(Debug)]
 enum AuthError {
-	Wreq(wreq::Error),
+	Http(http::Error),
 	SerdeDeserialize(serde_json::Error),
 	Field((serde_json::Value, &'static str)),
 }
 
-impl From<wreq::Error> for AuthError {
-	fn from(err: wreq::Error) -> Self {
-		AuthError::Wreq(err)
+impl From<http::Error> for AuthError {
+	fn from(err: http::Error) -> Self {
+		AuthError::Http(err)
 	}
 }
 
@@ -220,7 +222,7 @@ impl OauthBackend for MobileSpoofAuth {
 	async fn authenticate(&mut self) -> Result<OauthResponse, AuthError> {
 		// Construct URL for OAuth token
 		let url = format!("{AUTH_ENDPOINT}/auth/v2/oauth/access-token/loid");
-		let mut builder = CLIENT.post(&url);
+		let mut builder = CLIENT.post(Uri::try_from(url.as_str()).map_err(|e| AuthError::Http(Box::new(e)))?);
 
 		// Add headers from spoofed client
 		for (key, value) in &self.device.initial_headers {
@@ -252,14 +254,12 @@ impl OauthBackend for MobileSpoofAuth {
 		// Not worried about the privacy implications, since this is randomly changed
 		// and really only as privacy-concerning as the OAuth token itself.
 		if let Some(header) = resp.headers().get("x-reddit-loid") {
-			let header_val: &wreq::header::HeaderValue = header;
-			self.additional_headers.insert("x-reddit-loid".to_owned(), header_val.to_str().unwrap().to_string());
+			self.additional_headers.insert("x-reddit-loid".to_owned(), header.to_str().unwrap().to_string());
 		}
 
 		// Same with x-reddit-session
 		if let Some(header) = resp.headers().get("x-reddit-session") {
-			let header_val: &wreq::header::HeaderValue = header;
-			self.additional_headers.insert("x-reddit-session".to_owned(), header_val.to_str().unwrap().to_string());
+			self.additional_headers.insert("x-reddit-session".to_owned(), header.to_str().unwrap().to_string());
 		}
 
 		trace!("Serializing response...");
@@ -335,7 +335,7 @@ impl OauthBackend for GenericWebAuth {
 	async fn authenticate(&mut self) -> Result<OauthResponse, AuthError> {
 		// Construct URL for OAuth token
 		let url = "https://www.reddit.com/api/v1/access_token";
-		let mut builder = CLIENT.post(url);
+		let mut builder = CLIENT.post(Uri::try_from(url).map_err(|e| AuthError::Http(Box::new(e)))?);
 
 		// Add minimal headers
 		builder = builder.header("Host", "www.reddit.com");
@@ -357,7 +357,7 @@ impl OauthBackend for GenericWebAuth {
 		trace!("Sending GenericWebAuth token request to {url}...");
 
 		// Send request
-		let resp: wreq::Response = builder.body(body_str).send().await?;
+		let resp: HyperResponse<Body> = builder.body(body_str).send().await?;
 
 		trace!("Received response with status {} and length {:?}", resp.status(), resp.headers().get("content-length"));
 		trace!("GenericWebAuth headers: {:#?}", resp.headers());
@@ -368,14 +368,12 @@ impl OauthBackend for GenericWebAuth {
 		// Not worried about the privacy implications, since this is randomly changed
 		// and really only as privacy-concerning as the OAuth token itself.
 		if let Some(header) = resp.headers().get("x-reddit-loid") {
-			let header_val: &wreq::header::HeaderValue = header;
-			self.additional_headers.insert("x-reddit-loid".to_owned(), header_val.to_str().unwrap().to_string());
+			self.additional_headers.insert("x-reddit-loid".to_owned(), header.to_str().unwrap().to_string());
 		}
 
 		// Same with x-reddit-session
 		if let Some(header) = resp.headers().get("x-reddit-session") {
-			let header_val: &wreq::header::HeaderValue = header;
-			self.additional_headers.insert("x-reddit-session".to_owned(), header_val.to_str().unwrap().to_string());
+			self.additional_headers.insert("x-reddit-session".to_owned(), header.to_str().unwrap().to_string());
 		}
 
 		trace!("Serializing GenericWebAuth response...");
