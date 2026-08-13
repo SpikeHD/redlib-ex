@@ -1388,12 +1388,26 @@ pub fn template(t: &impl Template) -> Response<Body> {
 		.unwrap_or_default()
 }
 
+fn safe_redirect_path(path: &str) -> &str {
+	if path.len() >= 2 && path.starts_with('/') && !path.starts_with("//") && !path.contains(':') && !path.contains('\\') && !path.chars().any(|c| c.is_control()) {
+		path
+	} else {
+		"/"
+	}
+}
+
 pub fn redirect(path: &str) -> Response<Body> {
+	let path = safe_redirect_path(path);
+	let body = format!(
+		"Redirecting to <a href=\"{}\">{}</a>...",
+		htmlescape::encode_minimal(path),
+		htmlescape::encode_minimal(path),
+	);
 	Response::builder()
 		.status(302)
 		.header("content-type", "text/html")
 		.header("Location", path)
-		.body(format!("Redirecting to <a href=\"{path}\">{path}</a>...").into())
+		.body(body.into())
 		.unwrap_or_default()
 }
 
