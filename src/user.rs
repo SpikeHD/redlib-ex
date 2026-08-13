@@ -27,6 +27,8 @@ struct UserTemplate {
 	/// Whether all fetched posts are filtered (to differentiate between no posts fetched in the first place,
 	/// and all fetched posts being filtered).
 	all_posts_filtered: bool,
+	/// Whether all posts were hidden because the user has enabled the option to hide their posts, or deleted them.
+	all_posts_hidden: bool,
 	/// Whether all posts were hidden because they are NSFW (and user has disabled show NSFW)
 	all_posts_hidden_nsfw: bool,
 	no_posts: bool,
@@ -73,6 +75,7 @@ pub async fn profile(req: Request<Body>) -> Result<Response<Body>, String> {
 			redirect_url,
 			is_filtered: true,
 			all_posts_filtered: false,
+			all_posts_hidden: false,
 			all_posts_hidden_nsfw: false,
 			no_posts: false,
 		}))
@@ -82,6 +85,9 @@ pub async fn profile(req: Request<Body>) -> Result<Response<Body>, String> {
 			Ok((mut posts, after)) => {
 				let (_, all_posts_filtered) = filter_posts(&mut posts, &filters);
 				let no_posts = posts.is_empty();
+				// If the user hides their posts via the setting, a decent (imperfect) indicator
+				// of this is if the account has karma.
+				let all_posts_hidden = no_posts && user.karma > 0;
 				let all_posts_hidden_nsfw = !no_posts && (posts.iter().all(|p| p.flags.nsfw) && setting(&req, "show_nsfw") != "on");
 				Ok(template(&UserTemplate {
 					user,
@@ -94,6 +100,7 @@ pub async fn profile(req: Request<Body>) -> Result<Response<Body>, String> {
 					redirect_url,
 					is_filtered: false,
 					all_posts_filtered,
+					all_posts_hidden,
 					all_posts_hidden_nsfw,
 					no_posts,
 				}))
